@@ -1,16 +1,19 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
   @Column('text', {
-    nullable: false,
     unique: true,
   })
   username: string;
   @Column('text', {
-    nullable: false,
     unique: true,
   })
   email: string;
@@ -22,4 +25,6 @@ export class User {
     nullable: false,
   })
   fullName: string;
+  @DeleteDateColumn()
+  deleteAt?: string;
 }

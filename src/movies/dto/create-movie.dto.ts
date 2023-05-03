@@ -1,4 +1,12 @@
-import { IsArray, IsNumber, IsString, Min, MinLength } from 'class-validator';
+import {
+  IsArray,
+  IsDate,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export class CreateMovieDto {
   @IsString()
@@ -22,4 +30,7 @@ export class CreateMovieDto {
   @IsNumber()
   @Min(0)
   ranking: number;
+  @IsDate()
+  @IsOptional()
+  delete_date?: string;
 }

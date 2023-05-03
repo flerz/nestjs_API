@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { CriticsService } from './critics.service';
 import { CreateCriticDto } from './dto/create-critic.dto';
 import { UpdateCriticDto } from './dto/update-critic.dto';
@@ -13,12 +21,15 @@ export class CriticsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCriticDto: UpdateCriticDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateCriticDto: UpdateCriticDto,
+  ) {
     return this.criticsService.update(id, updateCriticDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.criticsService.remove(+id);
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.criticsService.remove(id);
   }
 }

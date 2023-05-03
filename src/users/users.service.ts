@@ -1,4 +1,9 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,8 +22,7 @@ export class UsersService {
       await this.userRepository.save(user);
       return user;
     } catch (error) {
-      console.log({ error });
-      throw new InternalServerErrorException('Fail');
+      this.errorHandler(error);
     }
   }
 
@@ -31,20 +35,54 @@ export class UsersService {
     }
   }
 
-  findOne(id: string) {
+  async findOne(id: string) {
     try {
-      const user = this.userRepository.findOneBy({ id });
+      const user = await this.userRepository.findOneBy({ id });
+
       return user;
     } catch (error) {
-      throw new InternalServerErrorException(`Can not get ${id}`);
+      this.errorHandler(error);
     }
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
-    return this.findOne(id);
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    try {
+      const user = await this.userRepository.preload({
+        id,
+        ...updateUserDto,
+      });
+      if (!user) throw new NotFoundException(`User ${id} not found`);
+      await this.userRepository.save(user);
+      return user;
+    } catch (error) {
+      this.errorHandler(error);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: string) {
+    const user = await this.findOne(id);
+    try {
+      if (!user.deleteAt) {
+        const queryBuilder = this.userRepository.createQueryBuilder();
+        const userDeleted = await queryBuilder
+          .softDelete()
+          .where('id = :id', { id: id })
+          .execute();
+
+        return userDeleted;
+      }
+    } catch (error) {
+      this.errorHandler(error, id, user);
+    }
+  }
+
+  private errorHandler(error, id?, user?) {
+    if (error.code === '23505')
+      throw new BadRequestException(`${error.detail}`);
+
+    if (!!id && !user)
+      throw new BadRequestException(`Record ${id} does not exits `);
+
+    throw new InternalServerErrorException(`${error}`);
   }
 }

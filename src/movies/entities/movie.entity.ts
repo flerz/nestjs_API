@@ -1,4 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class Movie {
@@ -18,4 +23,6 @@ export class Movie {
   genre: string[];
   @Column('text')
   critic: string;
+  @DeleteDateColumn()
+  deleteAt?: string;
 }
