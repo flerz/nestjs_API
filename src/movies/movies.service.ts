@@ -22,19 +22,29 @@ export class MoviesService {
     }
   }
 
-  findAll() {
-    return `This action returns all movies`;
+  async findAll() {
+    try {
+      const movies = await this.movieRepository.find({});
+      return movies;
+    } catch (error) {
+      throw new InternalServerErrorException('Can not get records.');
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} movie`;
+  findOne(id: string) {
+    try {
+      const movie = this.movieRepository.findOneBy({ id });
+      return movie;
+    } catch (error) {
+      throw new InternalServerErrorException(`Can not find movie ${id}`);
+    }
   }
 
-  update(id: number, updateMovieDto: UpdateMovieDto) {
-    return `This action updates a #${id} movie`;
+  update(id: string, updateMovieDto: UpdateMovieDto) {
+    return this.findOne(id);
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} movie`;
   }
 }

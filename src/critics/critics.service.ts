@@ -20,19 +20,20 @@ export class CriticsService {
       console.log({ error });
       throw new InternalServerErrorException('Help!!');
     }
-    return 'This action adds a new critic';
   }
 
-  findAll() {
-    return `This action returns all critics`;
-  }
-
-  findOne(id: number) {
+  async findOne(id: string) {
+    try {
+      const critic = await this.criticRepository.findOneBy({ id });
+      return critic;
+    } catch (error) {
+      throw new InternalServerErrorException(`Can not get critic ${id}`);
+    }
     return `This action returns a #${id} critic`;
   }
 
-  update(id: number, updateCriticDto: UpdateCriticDto) {
-    return `This action updates a #${id} critic`;
+  update(id: string, updateCriticDto: UpdateCriticDto) {
+    return this.findOne(id);
   }
 
   remove(id: number) {

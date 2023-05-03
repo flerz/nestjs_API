@@ -22,16 +22,26 @@ export class UsersService {
     }
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll() {
+    try {
+      const users = await this.userRepository.find({});
+      return users;
+    } catch (error) {
+      throw new InternalServerErrorException('Can not get records.');
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  findOne(id: string) {
+    try {
+      const user = this.userRepository.findOneBy({ id });
+      return user;
+    } catch (error) {
+      throw new InternalServerErrorException(`Can not get ${id}`);
+    }
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  update(id: string, updateUserDto: UpdateUserDto) {
+    return this.findOne(id);
   }
 
   remove(id: number) {

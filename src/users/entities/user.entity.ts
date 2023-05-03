@@ -6,10 +6,12 @@ export class User {
   id: string;
   @Column('text', {
     nullable: false,
+    unique: true,
   })
   username: string;
   @Column('text', {
     nullable: false,
+    unique: true,
   })
   email: string;
   @Column('text', {
