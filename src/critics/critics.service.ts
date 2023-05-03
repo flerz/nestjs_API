@@ -1,10 +1,25 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateCriticDto } from './dto/create-critic.dto';
 import { UpdateCriticDto } from './dto/update-critic.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Critic } from './entities/critic.entity';
 
 @Injectable()
 export class CriticsService {
-  create(createCriticDto: CreateCriticDto) {
+  constructor(
+    @InjectRepository(Critic)
+    private readonly criticRepository: Repository<Critic>,
+  ) {}
+  async create(createCriticDto: CreateCriticDto) {
+    try {
+      const critic = this.criticRepository.create(createCriticDto);
+      await this.criticRepository.save(critic);
+      return critic;
+    } catch (error) {
+      console.log({ error });
+      throw new InternalServerErrorException('Help!!');
+    }
     return 'This action adds a new critic';
   }
 

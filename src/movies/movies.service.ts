@@ -1,11 +1,25 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Movie } from './entities';
 
 @Injectable()
 export class MoviesService {
-  create(createMovieDto: CreateMovieDto) {
-    return 'This action adds a new movie';
+  constructor(
+    @InjectRepository(Movie)
+    private readonly movieRepository: Repository<Movie>,
+  ) {}
+  async create(createMovieDto: CreateMovieDto) {
+    try {
+      const movie = this.movieRepository.create(createMovieDto);
+      await this.movieRepository.save(movie);
+      return movie;
+    } catch (error) {
+      console.log({ error });
+      throw new InternalServerErrorException('Ayudita!!');
+    }
   }
 
   findAll() {

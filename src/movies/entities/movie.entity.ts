@@ -1,8 +1,8 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Movie {
-  @PrimaryColumn('numeric')
+  @PrimaryGeneratedColumn('uuid')
   id: number;
   @Column('text')
   title: string;

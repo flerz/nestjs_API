@@ -1,4 +1,4 @@
-import { IsArray, IsString, MinLength } from 'class-validator';
+import { IsArray, IsNumber, IsString, Min, MinLength } from 'class-validator';
 
 export class CreateMovieDto {
   @IsString()
@@ -15,9 +15,11 @@ export class CreateMovieDto {
   language: string;
   @IsString({ each: true })
   @IsArray()
-  @MinLength(1)
   genre: string[];
   @IsString()
   @MinLength(1)
   critic: string;
+  @IsNumber()
+  @Min(0)
+  ranking: number;
 }
