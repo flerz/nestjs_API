@@ -5,6 +5,8 @@ export class Movie {
   @PrimaryColumn('numeric')
   id: number;
   @Column('text')
+  title: string;
+  @Column('text')
   image: string;
   @Column('text')
   description: string;
