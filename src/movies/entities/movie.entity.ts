@@ -1,4 +1,5 @@
 import {
+  BeforeUpdate,
   Column,
   DeleteDateColumn,
   Entity,
@@ -23,6 +24,14 @@ export class Movie {
   genre: string[];
   @Column('text')
   critic: string;
-  @DeleteDateColumn()
+  @DeleteDateColumn({
+    select: false,
+  })
   deleteAt?: string;
+  @Column({
+    type: 'numeric',
+    insert: true,
+    array: true,
+  })
+  rank_votes: number[];
 }

@@ -39,6 +39,14 @@ export class MoviesController {
     return this.moviesService.update(id, updateMovieDto);
   }
 
+  @Patch('rate/:id')
+  rate(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateMovieDto: UpdateMovieDto,
+  ) {
+    return this.moviesService.rate(id, updateMovieDto);
+  }
+
   @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.moviesService.remove(id);

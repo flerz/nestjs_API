@@ -13,6 +13,8 @@ export class Critic {
     nullable: false,
   })
   description: string;
-  @DeleteDateColumn()
+  @DeleteDateColumn({
+    select: false,
+  })
   deleteAt?: string;
 }

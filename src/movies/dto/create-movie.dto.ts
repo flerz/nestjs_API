@@ -4,6 +4,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Max,
   Min,
   MinLength,
 } from 'class-validator';
@@ -29,6 +30,7 @@ export class CreateMovieDto {
   critic: string;
   @IsNumber()
   @Min(0)
+  @Max(5)
   ranking: number;
   @IsDate()
   @IsOptional()

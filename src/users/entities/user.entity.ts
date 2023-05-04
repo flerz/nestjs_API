@@ -25,6 +25,8 @@ export class User {
     nullable: false,
   })
   fullName: string;
-  @DeleteDateColumn()
+  @DeleteDateColumn({
+    select: false,
+  })
   deleteAt?: string;
 }

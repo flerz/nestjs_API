@@ -67,6 +67,25 @@ export class MoviesService {
     }
   }
 
+  async rate(id: string, updateMovieDto: UpdateMovieDto) {
+    const { ranking } = updateMovieDto;
+    try {
+      const movie = await this.movieRepository.preload({
+        id,
+        ...updateMovieDto,
+      });
+
+      movie.rank_votes.push(ranking);
+      movie.ranking =
+        movie.rank_votes.reduce((a, b) => a + b, 0) / movie.rank_votes.length;
+      if (!movie) throw new NotFoundException(`Movie ${id} not found`);
+      await this.movieRepository.save(movie);
+      return movie;
+    } catch (error) {
+      this.errorHandler(error);
+    }
+  }
+
   async remove(id: string) {
     const movie = await this.findOne(id);
     try {
