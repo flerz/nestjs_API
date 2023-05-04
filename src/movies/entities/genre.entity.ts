@@ -2,7 +2,7 @@ import { Entity, Column, PrimaryColumn } from 'typeorm';
 
 @Entity()
 export class Genre {
-  @PrimaryColumn()
+  @PrimaryColumn('numeric')
   id: number;
   @Column()
   name: string;

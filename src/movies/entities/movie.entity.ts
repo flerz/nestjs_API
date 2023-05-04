@@ -1,4 +1,5 @@
 import {
+  BeforeInsert,
   Column,
   DeleteDateColumn,
   Entity,
@@ -16,13 +17,13 @@ export class Movie {
   @Column('text')
   description: string;
   @Column('numeric')
-  ranking: number;
+  ranking?: number;
   @Column('text')
   language: string;
   @Column('text')
-  genre: string[];
+  genres?: string[];
   @Column('text')
-  critic: string;
+  critic?: string;
   @DeleteDateColumn({
     select: false,
   })
@@ -33,4 +34,9 @@ export class Movie {
     array: true,
   })
   rank_votes: number[];
+
+  @BeforeInsert()
+  rankVotes() {
+    this.rank_votes = [this.ranking];
+  }
 }

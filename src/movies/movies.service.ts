@@ -17,14 +17,15 @@ export class MoviesService {
     @InjectRepository(Movie)
     private readonly movieRepository: Repository<Movie>,
   ) {}
+
   async create(createMovieDto: CreateMovieDto) {
     try {
-      const movie = this.movieRepository.create(createMovieDto);
+      const movie = await this.movieRepository.create(createMovieDto);
       await this.movieRepository.save(movie);
       return movie;
     } catch (error) {
       console.log({ error });
-      throw new InternalServerErrorException('Ayudita!!');
+      this.errorHandler(error);
     }
   }
 
@@ -105,6 +106,9 @@ export class MoviesService {
 
   private errorHandler(error, id?, movie?) {
     if (error.code === '23505')
+      throw new BadRequestException(`${error.detail}`);
+
+    if (error.code === '23502')
       throw new BadRequestException(`${error.detail}`);
 
     if (!!id && !movie)

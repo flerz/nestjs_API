@@ -24,14 +24,17 @@ export class CreateMovieDto {
   language: string;
   @IsString({ each: true })
   @IsArray()
-  genre: string[];
+  @IsOptional()
+  genres?: string[];
   @IsString()
   @MinLength(1)
-  critic: string;
+  @IsOptional()
+  critic?: string;
   @IsNumber()
   @Min(0)
   @Max(5)
-  ranking: number;
+  @IsOptional()
+  ranking?: number;
   @IsDate()
   @IsOptional()
   delete_date?: string;
