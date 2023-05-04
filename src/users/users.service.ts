@@ -9,6 +9,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { isUUID } from 'class-validator';
 
 @Injectable()
 export class UsersService {
@@ -36,8 +37,18 @@ export class UsersService {
   }
 
   async findOne(id: string) {
+    let user: User;
     try {
-      const user = await this.userRepository.findOneBy({ id });
+      if (isUUID(id)) user = await this.userRepository.findOneBy({ id });
+
+      if (!user) {
+        const queryBuilder = this.userRepository.createQueryBuilder();
+        user = await queryBuilder
+          .where('LOWER(username) =:username', {
+            username: id.toLowerCase(),
+          })
+          .getOne();
+      }
 
       return user;
     } catch (error) {
@@ -53,6 +64,16 @@ export class UsersService {
       });
       if (!user) throw new NotFoundException(`User ${id} not found`);
       await this.userRepository.save(user);
+      return user;
+    } catch (error) {
+      this.errorHandler(error);
+    }
+  }
+
+  async getRandomUser() {
+    const randUser = this.userRepository.createQueryBuilder('user');
+    try {
+      const user = await randUser.select().orderBy('RANDOM()').getOne();
       return user;
     } catch (error) {
       this.errorHandler(error);
@@ -77,6 +98,8 @@ export class UsersService {
   }
 
   private errorHandler(error, id?, user?) {
+    console.log({ error });
+
     if (error.code === '23505')
       throw new BadRequestException(`${error.detail}`);
 

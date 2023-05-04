@@ -8,5 +8,6 @@ import { Critic } from './entities/critic.entity';
   controllers: [CriticsController],
   providers: [CriticsService],
   imports: [TypeOrmModule.forFeature([Critic])],
+  exports: [CriticsService],
 })
 export class CriticsModule {}

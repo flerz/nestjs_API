@@ -9,6 +9,7 @@ import { UpdateCriticDto } from './dto/update-critic.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Critic } from './entities/critic.entity';
+import { debug } from 'console';
 
 @Injectable()
 export class CriticsService {
@@ -51,19 +52,13 @@ export class CriticsService {
   }
 
   async remove(id: string) {
-    const critic = await this.findOne(id);
     try {
-      if (!critic.deleteAt) {
-        const queryBuilder = this.criticRepository.createQueryBuilder();
-        const criticDeleted = await queryBuilder
-          .softDelete()
-          .where('id = :id', { id: id })
-          .execute();
+      const queryBuilder = this.criticRepository.createQueryBuilder();
+      await queryBuilder.softDelete().where('id = :id', { id: id }).execute();
 
-        return criticDeleted;
-      }
+      return;
     } catch (error) {
-      this.errorHandler(error, id, critic);
+      this.errorHandler(error);
     }
   }
 
