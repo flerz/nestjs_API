@@ -11,7 +11,7 @@ yarn install
 
 ## Levantar DB
 
- Crear copia del archivo __.env.template___ y renombrar la copia como __.env___
+ Crear copia del archivo __.env.template__ y renombrar la copia como __.env__
 
 
 ```
