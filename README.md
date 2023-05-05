@@ -11,6 +11,9 @@ yarn install
 
 ## Levantar DB
 
+ Crear copia del archivo __.env.template___ y renombrar la copia como __.env___
+
+
 ```
 docker-compose up -d
 ```
@@ -20,3 +23,5 @@ docker-compose up -d
 ```
 yarn start:dev
 ```
+
+
