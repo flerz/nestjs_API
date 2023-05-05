@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MoviesModule } from './movies/movies.module';
 import { UsersModule } from './users/users.module';
 import { CriticsModule } from './critics/critics.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { CriticsModule } from './critics/critics.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
+    ScheduleModule.forRoot(),
     MoviesModule,
     UsersModule,
     CriticsModule,

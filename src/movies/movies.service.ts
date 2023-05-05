@@ -2,24 +2,37 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateMovieDto } from './dto/create-movie.dto';
-import { UpdateMovieDto } from './dto/update-movie.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Genre, Movie } from './entities';
 import { isUUID } from 'class-validator';
+import axios, { AxiosInstance } from 'axios';
+
 import { UsersService } from 'src/users/users.service';
 import { CriticsService } from 'src/critics/critics.service';
 import { CreateCriticDto } from 'src/critics/dto/create-critic.dto';
 import { UpdateCriticDto } from 'src/critics/dto/update-critic.dto';
+import { Genre, Movie } from './entities';
 import { Genero, Genres } from './interfaces/genre.interface';
-import axios, { AxiosInstance } from 'axios';
+import { CreateMovieDto } from './dto/create-movie.dto';
+import { UpdateMovieDto } from './dto/update-movie.dto';
+import { Movies } from './interfaces/movie.interface';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class MoviesService {
+  private readonly logger = new Logger(MoviesService.name);
+
   private readonly axios: AxiosInstance = axios;
+
+  @Cron(CronExpression.EVERY_DAY_AT_2AM)
+  handleCron() {
+    this.loadAPIInfo();
+    this.logger.debug('Movies and Genres Update.');
+  }
+
   constructor(
     @InjectRepository(Movie)
     private readonly movieRepository: Repository<Movie>,
@@ -41,13 +54,24 @@ export class MoviesService {
 
   async create(createMovieDto: CreateMovieDto) {
     const randomUser = await this.userService.getRandomUser();
-    console.log({ randomUser });
+    const { genres, ...moviedetails } = createMovieDto;
+    let genresQ: Genre[] = [];
+    if (typeof genres[0] === 'string') {
+      genres.forEach(async (genre) => {
+        const a = await this.findGenre(`${genre}`);
+
+        genresQ.push(a);
+        //console.log({ genresQ });
+      });
+    } else {
+      genresQ = [...genres];
+    }
 
     try {
       const movie = this.movieRepository.create({
-        ...createMovieDto,
+        ...moviedetails,
         user: randomUser,
-        genres: [],
+        genres: genresQ,
       });
       await this.movieRepository.save(movie);
       return movie;
@@ -58,6 +82,14 @@ export class MoviesService {
   }
 
   async loadAPIInfo() {
+    await this.loadGenres();
+
+    await this.loadMovies();
+
+    return 'sí';
+  }
+
+  async loadGenres() {
     const {
       data: { genres },
     } = await axios.get<Genres>(
@@ -71,9 +103,40 @@ export class MoviesService {
         name: genre.name.toLowerCase(),
       });
     });
-    return 'sí';
+    return;
   }
 
+  async loadMovies() {
+    const {
+      data: { results },
+    } = await axios.get<Movies>(
+      `${process.env.BASE_URL}/movie/popular?api_key=${process.env.API_KEY}`,
+    );
+    await this.movieRepository.delete({});
+    results.forEach(async (movie) => {
+      const genres: Genre[] = [];
+      movie.genre_ids.forEach(async (genre) => {
+        const genreDB = await this.findGenre(genre.toString());
+        genres.push(genreDB);
+      });
+
+      await this.create({
+        title: movie.original_title,
+        image: movie.poster_path,
+        description: movie.overview,
+        language: movie.original_language,
+        genres,
+      });
+    });
+    return;
+  }
+
+  async findGenre(id: string) {
+    let genre = await this.genreRepository.findOneBy({ id: +id });
+    if (!genre)
+      genre = await this.genreRepository.findOne({ where: { name: id } });
+    return genre;
+  }
   async findAll() {
     try {
       const movies = await this.movieRepository.find({});
@@ -108,7 +171,6 @@ export class MoviesService {
       const movie = await this.movieRepository.preload({
         id,
         ...updateMovieDto,
-        genres: [],
       });
       if (!movie) throw new NotFoundException(`Movie ${id} not found`);
       await this.movieRepository.save(movie);
@@ -125,7 +187,6 @@ export class MoviesService {
       const movie = await this.movieRepository.preload({
         id,
         ...updateMovieDto,
-        genres: [],
       });
 
       if (!movie.rank_votes[0]) movie.rank_votes.shift();
