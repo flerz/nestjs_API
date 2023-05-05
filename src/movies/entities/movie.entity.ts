@@ -6,10 +6,13 @@ import {
   DeleteDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Genre } from './genre.entity';
 
 @Entity()
 export class Movie {
@@ -31,9 +34,6 @@ export class Movie {
   @Column('text')
   language: string;
 
-  @Column('text')
-  genres?: string[];
-
   @Column({
     type: 'numeric',
     insert: true,
@@ -52,6 +52,10 @@ export class Movie {
 
   @ManyToOne(() => User, (user) => user.movies)
   user: User;
+
+  @ManyToMany(() => Genre, { eager: true })
+  @JoinTable()
+  genres: Genre[];
 
   @BeforeInsert()
   rankVotes() {

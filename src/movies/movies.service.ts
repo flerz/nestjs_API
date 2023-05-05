@@ -8,21 +8,36 @@ import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Movie } from './entities';
+import { Genre, Movie } from './entities';
 import { isUUID } from 'class-validator';
 import { UsersService } from 'src/users/users.service';
 import { CriticsService } from 'src/critics/critics.service';
 import { CreateCriticDto } from 'src/critics/dto/create-critic.dto';
 import { UpdateCriticDto } from 'src/critics/dto/update-critic.dto';
+import { Genero, Genres } from './interfaces/genre.interface';
+import axios, { AxiosInstance } from 'axios';
 
 @Injectable()
 export class MoviesService {
+  private readonly axios: AxiosInstance = axios;
   constructor(
     @InjectRepository(Movie)
     private readonly movieRepository: Repository<Movie>,
+    @InjectRepository(Genre)
+    private readonly genreRepository: Repository<Genre>,
     private readonly userService: UsersService,
     private readonly criticService: CriticsService,
   ) {}
+
+  async createGenre(genre: Genero) {
+    try {
+      const genreDB = this.genreRepository.create(genre);
+      await this.genreRepository.save(genreDB);
+      return;
+    } catch (error) {
+      this.errorHandler(error);
+    }
+  }
 
   async create(createMovieDto: CreateMovieDto) {
     const randomUser = await this.userService.getRandomUser();
@@ -32,6 +47,7 @@ export class MoviesService {
       const movie = this.movieRepository.create({
         ...createMovieDto,
         user: randomUser,
+        genres: [],
       });
       await this.movieRepository.save(movie);
       return movie;
@@ -39,6 +55,23 @@ export class MoviesService {
       console.log({ error });
       this.errorHandler(error);
     }
+  }
+
+  async loadAPIInfo() {
+    const {
+      data: { genres },
+    } = await axios.get<Genres>(
+      `${process.env.BASE_URL}/genre/movie/list?api_key=${process.env.API_KEY}`,
+    );
+
+    await this.genreRepository.delete({});
+    genres.forEach(async (genre) => {
+      await this.createGenre({
+        id: genre.id,
+        name: genre.name.toLowerCase(),
+      });
+    });
+    return 'sí';
   }
 
   async findAll() {
@@ -75,6 +108,7 @@ export class MoviesService {
       const movie = await this.movieRepository.preload({
         id,
         ...updateMovieDto,
+        genres: [],
       });
       if (!movie) throw new NotFoundException(`Movie ${id} not found`);
       await this.movieRepository.save(movie);
@@ -91,6 +125,7 @@ export class MoviesService {
       const movie = await this.movieRepository.preload({
         id,
         ...updateMovieDto,
+        genres: [],
       });
 
       if (!movie.rank_votes[0]) movie.rank_votes.shift();

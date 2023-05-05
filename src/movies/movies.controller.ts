@@ -28,6 +28,10 @@ export class MoviesController {
     return this.moviesService.findAll();
   }
 
+  @Get('//seed')
+  load() {
+    return this.moviesService.loadAPIInfo();
+  }
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.moviesService.findOne(id);
