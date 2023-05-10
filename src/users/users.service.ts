@@ -4,12 +4,14 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
 import { isUUID } from 'class-validator';
+import * as bcrypt from 'bcrypt';
+import { User } from './entities/user.entity';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { LoginUserDto } from './dto/login-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -18,13 +20,31 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
   ) {}
   async create(createUserDto: CreateUserDto) {
+    const { password, ...userDetails } = createUserDto;
     try {
-      const user = this.userRepository.create(createUserDto);
+      const user = this.userRepository.create({
+        ...userDetails,
+        password: bcrypt.hashSync(password, 10),
+      });
       await this.userRepository.save(user);
       return user;
     } catch (error) {
       this.errorHandler(error);
     }
+  }
+
+  async login(loginUserDto: LoginUserDto) {
+    const { username, password } = loginUserDto;
+    let user = await this.userRepository.findOne({ where: { username } });
+
+    if (!user)
+      user = await this.userRepository.findOne({ where: { email: username } });
+
+    if (!user) throw new NotFoundException('Username/email not found');
+
+    if (!bcrypt.compareSync(password, user.password))
+      throw new BadRequestException('Wrong password');
+    return user;
   }
 
   async findAll() {

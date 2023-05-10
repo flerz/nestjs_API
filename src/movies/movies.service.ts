@@ -16,7 +16,7 @@ import { CreateCriticDto } from 'src/critics/dto/create-critic.dto';
 import { UpdateCriticDto } from 'src/critics/dto/update-critic.dto';
 import { Genre, Movie } from './entities';
 import { Genero, Genres } from './interfaces/genre.interface';
-import { CreateMovieDto } from './dto/create-movie.dto';
+import { CreateMovieDto, PreCreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movies } from './interfaces/movie.interface';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -52,26 +52,25 @@ export class MoviesService {
     }
   }
 
+  async preCreate(preCreateMovieDto: PreCreateMovieDto) {
+    const { genres, ...movieDetails } = preCreateMovieDto;
+    const genresDB: Genre[] = [];
+    genres.forEach(async (genre) => {
+      const genreQ = await this.genreRepository.findOne({
+        where: { name: genre },
+      });
+      genresDB.push(genreQ);
+    });
+    return this.create({ ...movieDetails, genres: genresDB });
+  }
+
   async create(createMovieDto: CreateMovieDto) {
     const randomUser = await this.userService.getRandomUser();
-    const { genres, ...moviedetails } = createMovieDto;
-    let genresQ: Genre[] = [];
-    if (typeof genres[0] === 'string') {
-      genres.forEach(async (genre) => {
-        const a = await this.findGenre(`${genre}`);
-
-        genresQ.push(a);
-        //console.log({ genresQ });
-      });
-    } else {
-      genresQ = [...genres];
-    }
 
     try {
       const movie = this.movieRepository.create({
-        ...moviedetails,
+        ...createMovieDto,
         user: randomUser,
-        genres: genresQ,
       });
       await this.movieRepository.save(movie);
       return movie;

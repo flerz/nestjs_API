@@ -11,7 +11,7 @@ import {
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { MoviesService } from './movies.service';
-import { CreateMovieDto } from './dto/create-movie.dto';
+import { CreateMovieDto, PreCreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { CreateCriticDto } from 'src/critics/dto/create-critic.dto';
 import { UpdateCriticDto } from 'src/critics/dto/update-critic.dto';
@@ -24,8 +24,8 @@ export class MoviesController {
 
   @Post()
   @ApiResponse({ status: 201, description: 'Película agregada', type: Movie })
-  create(@Body() createMovieDto: CreateMovieDto) {
-    return this.moviesService.create(createMovieDto);
+  create(@Body() createMovieDto: PreCreateMovieDto) {
+    return this.moviesService.preCreate(createMovieDto);
   }
 
   @Get()
@@ -94,5 +94,10 @@ export class MoviesController {
     @Param('cid', ParseUUIDPipe) cid: string,
   ) {
     return this.moviesService.removeCritic(id, cid);
+  }
+
+  @Get('//seed')
+  seed() {
+    return this.moviesService.loadAPIInfo();
   }
 }
