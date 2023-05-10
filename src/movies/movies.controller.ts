@@ -11,7 +11,7 @@ import {
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { MoviesService } from './movies.service';
-import { CreateMovieDto, PreCreateMovieDto } from './dto/create-movie.dto';
+import { PreCreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { CreateCriticDto } from 'src/critics/dto/create-critic.dto';
 import { UpdateCriticDto } from 'src/critics/dto/update-critic.dto';
@@ -24,6 +24,7 @@ export class MoviesController {
 
   @Post()
   @ApiResponse({ status: 201, description: 'Película agregada', type: Movie })
+  @ApiResponse({ status: 400, description: 'Formulario erróneo' })
   create(@Body() createMovieDto: PreCreateMovieDto) {
     return this.moviesService.preCreate(createMovieDto);
   }
@@ -34,14 +35,17 @@ export class MoviesController {
     return this.moviesService.findAll();
   }
 
-  @Get(':id')
+  @Get(':term')
   @ApiResponse({ status: 200, description: 'Película consultada', type: Movie })
-  findOne(@Param('id') id: string) {
-    return this.moviesService.findOne(id);
+  @ApiResponse({ status: 404, description: 'Película no existe' })
+  findOne(@Param('term') term: string) {
+    return this.moviesService.findOne(term);
   }
 
   @Post(':id/critics')
   @ApiResponse({ status: 201, description: 'Crítica agregada', type: Movie })
+  @ApiResponse({ status: 400, description: 'Película no existe' })
+  @ApiResponse({ status: 400, description: 'Formulario erróneo' })
   postCritic(
     @Body() createCritic: CreateCriticDto,
     @Param('id', ParseUUIDPipe) id: string,
@@ -60,6 +64,8 @@ export class MoviesController {
 
   @Patch(':id/critics/:cid')
   @ApiResponse({ status: 200, description: 'Crítica editada', type: Movie })
+  @ApiResponse({ status: 400, description: 'Película no existe' })
+  @ApiResponse({ status: 400, description: 'Crítica no existe' })
   patchCritic(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('cid', ParseUUIDPipe) cid: string,
@@ -74,6 +80,7 @@ export class MoviesController {
     description: 'Calificación de película editada',
     type: Movie,
   })
+  @ApiResponse({ status: 400, description: 'Película no existe' })
   rate(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateMovieDto: UpdateMovieDto,
@@ -83,12 +90,15 @@ export class MoviesController {
 
   @Delete(':id')
   @ApiResponse({ status: 200, description: 'Película eliminada' })
+  @ApiResponse({ status: 404, description: 'Película no existe' })
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.moviesService.remove(id);
   }
 
   @Delete(':id/critics/:cid')
   @ApiResponse({ status: 200, description: 'Crítica eliminada' })
+  @ApiResponse({ status: 404, description: 'Película no existe' })
+  @ApiResponse({ status: 404, description: 'Crítica no existe' })
   removeCritic(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('cid', ParseUUIDPipe) cid: string,
@@ -96,8 +106,9 @@ export class MoviesController {
     return this.moviesService.removeCritic(id, cid);
   }
 
-  @Get('//seed')
-  seed() {
-    return this.moviesService.loadAPIInfo();
-  }
+  // Descomentar si se quiere cargar la DB con información de la API
+  // @Get('//seed')
+  // seed() {
+  //   return this.moviesService.loadAPIInfo();
+  // }
 }

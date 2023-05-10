@@ -79,6 +79,9 @@ export class Movie {
   })
   rank_votes: number[];
 
+  @Column('text')
+  slug?: string;
+
   @DeleteDateColumn({
     select: false,
   })
@@ -107,5 +110,13 @@ export class Movie {
   @BeforeInsert()
   rankVotes() {
     this.rank_votes = [this.ranking];
+  }
+
+  @BeforeInsert()
+  slugMaker() {
+    this.slug = this.title
+      .replaceAll(' ', '_')
+      .replaceAll("'", '')
+      .toLowerCase();
   }
 }

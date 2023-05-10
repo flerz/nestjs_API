@@ -55,13 +55,18 @@ export class MoviesService {
   async preCreate(preCreateMovieDto: PreCreateMovieDto) {
     const { genres, ...movieDetails } = preCreateMovieDto;
     const genresDB: Genre[] = [];
-    genres.forEach(async (genre) => {
-      const genreQ = await this.genreRepository.findOne({
-        where: { name: genre },
+    try {
+      genres.forEach(async (genre) => {
+        const genreQ = await this.genreRepository.findOne({
+          where: { name: genre.toLowerCase() },
+        });
+        genresDB.push(genreQ);
       });
-      genresDB.push(genreQ);
-    });
-    return this.create({ ...movieDetails, genres: genresDB });
+
+      return this.create({ ...movieDetails, genres: genresDB });
+    } catch (error) {
+      this.errorHandler(error);
+    }
   }
 
   async create(createMovieDto: CreateMovieDto) {
@@ -75,7 +80,6 @@ export class MoviesService {
       await this.movieRepository.save(movie);
       return movie;
     } catch (error) {
-      console.log({ error });
       this.errorHandler(error);
     }
   }
@@ -155,8 +159,8 @@ export class MoviesService {
     if (!movie) {
       const queryBuilder = this.movieRepository.createQueryBuilder('mov');
       movie = await queryBuilder
-        .where('LOWER(title) = :title', {
-          title: id.toLowerCase(),
+        .where('slug = :slug', {
+          slug: id.toLowerCase(),
         })
         .leftJoinAndSelect('mov.critic', 'critic')
         .getOne();
@@ -194,12 +198,10 @@ export class MoviesService {
       movie.ranking =
         movie.rank_votes.reduce((a, b) => a + b, 0) / movie.rank_votes.length;
 
-      if (!movie) throw new NotFoundException(`Movie ${id} not found`);
-
       await this.movieRepository.save(movie);
       return movie;
     } catch (error) {
-      this.errorHandler(error);
+      this.errorHandler(error, id);
     }
   }
 
@@ -229,7 +231,7 @@ export class MoviesService {
       await this.movieRepository.save(movie);
       return movie;
     } catch (error) {
-      this.errorHandler(error);
+      this.errorHandler(error, id);
     }
   }
 
@@ -246,12 +248,15 @@ export class MoviesService {
       await this.movieRepository.save(movie);
       return movie;
     } catch (error) {
-      this.errorHandler(error);
+      this.errorHandler(error, id);
     }
   }
 
   async removeCritic(id: string, cid: string) {
     try {
+      const movie = await this.findOne(id);
+      if (movie.critic.id !== cid)
+        throw new NotFoundException(`Movie ${id} does not have critic ${cid}`);
       await this.criticService.remove(cid);
       return;
     } catch (error) {
@@ -269,6 +274,6 @@ export class MoviesService {
     if (!!id && !movie)
       throw new BadRequestException(`Record ${id} does not exits `);
 
-    throw new InternalServerErrorException(`${error}`);
+    throw error;
   }
 }

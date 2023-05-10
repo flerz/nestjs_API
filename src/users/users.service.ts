@@ -40,7 +40,7 @@ export class UsersService {
     if (!user)
       user = await this.userRepository.findOne({ where: { email: username } });
 
-    if (!user) throw new NotFoundException('Username/email not found');
+    if (!user) throw new BadRequestException('Username/email not found');
 
     if (!bcrypt.compareSync(password, user.password))
       throw new BadRequestException('Wrong password');
@@ -70,9 +70,10 @@ export class UsersService {
           .getOne();
       }
 
+      if (!user) throw new NotFoundException(`User ${id} not found`);
       return user;
     } catch (error) {
-      this.errorHandler(error);
+      this.errorHandler(error, id);
     }
   }
 
@@ -86,7 +87,7 @@ export class UsersService {
       await this.userRepository.save(user);
       return user;
     } catch (error) {
-      this.errorHandler(error);
+      this.errorHandler(error, id);
     }
   }
 
@@ -118,14 +119,12 @@ export class UsersService {
   }
 
   private errorHandler(error, id?, user?) {
-    console.log({ error });
-
     if (error.code === '23505')
       throw new BadRequestException(`${error.detail}`);
 
     if (!!id && !user)
-      throw new BadRequestException(`Record ${id} does not exits `);
+      throw new NotFoundException(`Record ${id} does not exits `);
 
-    throw new InternalServerErrorException(`${error}`);
+    throw new BadRequestException(`${error}`);
   }
 }
