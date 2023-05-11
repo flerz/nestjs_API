@@ -8,6 +8,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { isUUID } from 'class-validator';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
+import { JwtPayload } from 'src/users/interfaces/jwt-payload.interface';
+
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -18,7 +21,9 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
+
   async create(createUserDto: CreateUserDto) {
     const { password, ...userDetails } = createUserDto;
     try {
@@ -44,7 +49,10 @@ export class UsersService {
 
     if (!bcrypt.compareSync(password, user.password))
       throw new BadRequestException('Wrong password');
-    return user;
+    return {
+      ...user,
+      token: this.getJwtToken({ id: user.id }),
+    };
   }
 
   async findAll() {
@@ -116,6 +124,11 @@ export class UsersService {
     } catch (error) {
       this.errorHandler(error, id, user);
     }
+  }
+
+  private getJwtToken(payload: JwtPayload) {
+    const token = this.jwtService.sign(payload);
+    return token;
   }
 
   private errorHandler(error, id?, user?) {
