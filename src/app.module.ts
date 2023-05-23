@@ -5,6 +5,7 @@ import { MoviesModule } from './movies/movies.module';
 import { UsersModule } from './users/users.module';
 import { CriticsModule } from './critics/critics.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     MoviesModule,
     UsersModule,
     CriticsModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
