@@ -1,9 +1,9 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   Logger,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -222,16 +222,24 @@ export class MoviesService {
     }
   }
 
-  async createCritic(id: string, createCritic: CreateCriticDto) {
+  async createCritic(
+    id: string,
+    createCritic: CreateCriticDto,
+    userId: string,
+  ) {
+    let movie = await this.findOne(id);
     try {
-      const movie = await this.movieRepository.preload({
+      if (movie.user.id !== userId)
+        throw new UnauthorizedException('User invalid');
+      movie = await this.movieRepository.preload({
         id,
         critic: await this.criticService.create(createCritic),
       });
+
       await this.movieRepository.save(movie);
       return movie;
     } catch (error) {
-      this.errorHandler(error, id);
+      this.errorHandler(error, id, movie);
     }
   }
 
@@ -239,22 +247,29 @@ export class MoviesService {
     id: string,
     cid: string,
     updateCriticDto: UpdateCriticDto,
+    userId: string,
   ) {
+    let movie = await this.findOne(id);
     try {
-      const movie = await this.movieRepository.preload({
+      if (movie.user.id !== userId)
+        throw new UnauthorizedException('User invalid');
+      movie = await this.movieRepository.preload({
         id,
         critic: await this.criticService.update(cid, updateCriticDto),
       });
       await this.movieRepository.save(movie);
       return movie;
     } catch (error) {
-      this.errorHandler(error, id);
+      this.errorHandler(error, id, movie);
     }
   }
 
-  async removeCritic(id: string, cid: string) {
+  async removeCritic(id: string, cid: string, userId: string) {
     try {
-      const movie = await this.findOne(id);
+      let movie = await this.findOne(id);
+      if (movie.user.id !== userId)
+        throw new UnauthorizedException('User invalid');
+      movie = await this.findOne(id);
       if (movie.critic.id !== cid)
         throw new NotFoundException(`Movie ${id} does not have critic ${cid}`);
       await this.criticService.remove(cid);

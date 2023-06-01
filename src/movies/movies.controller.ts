@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
@@ -16,6 +17,9 @@ import { UpdateMovieDto } from './dto/update-movie.dto';
 import { CreateCriticDto } from 'src/critics/dto/create-critic.dto';
 import { UpdateCriticDto } from 'src/critics/dto/update-critic.dto';
 import { Movie } from './entities';
+import { AuthGuard } from '@nestjs/passport';
+import { User } from 'src/users/entities/user.entity';
+import { GetUser } from 'src/auth/decorators/get-user.decorator';
 
 @ApiTags('Movies')
 @Controller('movies')
@@ -43,14 +47,16 @@ export class MoviesController {
   }
 
   @Post(':id/critics')
+  @UseGuards(AuthGuard())
   @ApiResponse({ status: 201, description: 'Crítica agregada', type: Movie })
   @ApiResponse({ status: 400, description: 'Película no existe' })
   @ApiResponse({ status: 400, description: 'Formulario erróneo' })
   postCritic(
+    @GetUser() user: User,
     @Body() createCritic: CreateCriticDto,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.moviesService.createCritic(id, createCritic);
+    return this.moviesService.createCritic(id, createCritic, user.id);
   }
 
   @Patch(':id')
@@ -63,15 +69,17 @@ export class MoviesController {
   }
 
   @Patch(':id/critics/:cid')
+  @UseGuards(AuthGuard())
   @ApiResponse({ status: 200, description: 'Crítica editada', type: Movie })
   @ApiResponse({ status: 400, description: 'Película no existe' })
   @ApiResponse({ status: 400, description: 'Crítica no existe' })
   patchCritic(
+    @GetUser() user: User,
     @Param('id', ParseUUIDPipe) id: string,
     @Param('cid', ParseUUIDPipe) cid: string,
     @Body() updateCriticDto: UpdateCriticDto,
   ) {
-    return this.moviesService.updateCritic(id, cid, updateCriticDto);
+    return this.moviesService.updateCritic(id, cid, updateCriticDto, user.id);
   }
 
   @Patch('rate/:id')
@@ -96,14 +104,16 @@ export class MoviesController {
   }
 
   @Delete(':id/critics/:cid')
+  @UseGuards(AuthGuard())
   @ApiResponse({ status: 200, description: 'Crítica eliminada' })
   @ApiResponse({ status: 404, description: 'Película no existe' })
   @ApiResponse({ status: 404, description: 'Crítica no existe' })
   removeCritic(
+    @GetUser() user: User,
     @Param('id', ParseUUIDPipe) id: string,
     @Param('cid', ParseUUIDPipe) cid: string,
   ) {
-    return this.moviesService.removeCritic(id, cid);
+    return this.moviesService.removeCritic(id, cid, user.id);
   }
 
   // Descomentar si se quiere cargar la DB con información de la API

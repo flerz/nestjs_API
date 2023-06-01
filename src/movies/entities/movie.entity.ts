@@ -97,7 +97,7 @@ export class Movie {
   // @ApiProperty({
   //   oneOf: [{ $ref: getSchemaPath(User) }],
   // })
-  @ManyToOne(() => User, (user) => user.movies)
+  @ManyToOne(() => User, (user) => user.movies, { eager: true })
   user: User;
 
   @ApiProperty({
